@@ -1039,13 +1039,13 @@ int preflight_check(struct vehicle_status_s *status, orb_advert_t *mavlink_log_p
 		}
 	}
 
-	if (battery->warning >= battery_status_s::BATTERY_WARNING_LOW) {
+	/*if (battery->warning >= battery_status_s::BATTERY_WARNING_LOW) {
 		preflight_ok = false;
 
 		if (reportFailures) {
 			mavlink_log_critical(mavlink_log_pub, "ARMING DENIED: LOW BATTERY");
 		}
-	}
+	}*/
 
 	// mission required
 	if (arm_mission_required &&
