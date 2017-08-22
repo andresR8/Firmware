@@ -1,0 +1,32 @@
+#!nsh
+#
+# @name Kiwbot
+# Hardware -> Redcat Landsline
+# @url https://kiwicampus.com
+#
+# @type Rover
+# @class Rover
+#
+# @output MAIN1 steering
+# @output MAIN2 throttle
+#
+# @maintainer Andres Rengifo
+#
+
+set VEHICLE_TYPE ugv
+
+
+# Enable servo output on pins 1 and 2 (steering and thrust)
+# but also include 3+4 as they form together one output group
+# and need to be set together.
+set PWM_OUT 1234
+# Set mixer
+set MIXER redcat
+
+
+# This is the gimbal pass mixer
+set PWM_AUX_OUT 1234
+set MIXER_AUX kiwi
+
+# Configure this as ugv
+set MAV_TYPE 10
