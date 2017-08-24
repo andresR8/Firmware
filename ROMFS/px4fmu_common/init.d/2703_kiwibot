@@ -9,8 +9,8 @@
 #
 # @output MAIN1 steering
 # @output MAIN2 throttle
-# @output AUX1  pan servo
-# @output AUX2  door servo
+# @output AUX2  pan servo
+# @output AUX3  door servo
 # @maintainer Andres Rengifo
 #
 
@@ -25,9 +25,10 @@ set PWM_OUT 1234
 set MIXER redcat
 
 
-# This is the gimbal pass mixer
+# This is the kiwi mixer
 set PWM_AUX_OUT 1234
 set MIXER_AUX kiwi
+set PWM_AUX_RATE 60
 
 # Configure this as ugv
 set MAV_TYPE 10

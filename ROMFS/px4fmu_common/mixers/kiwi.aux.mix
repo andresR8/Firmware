@@ -1,18 +1,18 @@
 # Aux channels through mixer for servo outputs 1-4
 
 # AUX1 channel 
+Z:
+
+# AUX2 channel 
 M: 1
 O:      10000  10000      0 -10000  10000
 S: 1 0  10000  10000      0 -10000  10000
 
-# AUX2 channel
+# AUX3 channel
 M: 1
-O:      10000  10000      0 -10000  10000
-S: 1 1  10000  10000      0 -10000  10000
-
-# AUX3 channel 
-S:
+O:      10000  10000       0 -10000  10000
+S: 1 1  10000  10000  -10000 -10000  10000
 
 # AUX4 channel
-S:
-
+Z:
+ 
