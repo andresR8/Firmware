@@ -1,20 +1,18 @@
-# Manual pass through mixer for servo outputs 1-4
+# Aux channels through mixer for servo outputs 1-4
 
-
-# AUX1 channel (select RC channel with RC_MAP_AUX1 param)
+# AUX1 channel 
 M: 1
 O:      10000  10000      0 -10000  10000
-S: 3 5  10000  10000      0 -10000  10000
+S: 1 0  10000  10000      0 -10000  10000
 
-# AUX2 channel (select RC channel with RC_MAP_AUX2 param)
+# AUX2 channel
 M: 1
 O:      10000  10000      0 -10000  10000
-S: 3 6  10000  10000      0 -10000  10000
+S: 1 1  10000  10000      0 -10000  10000
 
-# AUX3 channel (select RC channel with RC_MAP_AUX3 param)
-M: 1
-O:      10000  10000      0 -10000  10000
-S: 3 7  10000  10000      0 -10000  10000
+# AUX3 channel 
+S:
 
-# AUX4 channel unset
-Z:
+# AUX4 channel
+S:
+

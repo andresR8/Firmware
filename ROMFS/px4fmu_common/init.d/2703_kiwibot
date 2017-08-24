@@ -9,7 +9,8 @@
 #
 # @output MAIN1 steering
 # @output MAIN2 throttle
-#
+# @output AUX1  pan servo
+# @output AUX2  door servo
 # @maintainer Andres Rengifo
 #
 
