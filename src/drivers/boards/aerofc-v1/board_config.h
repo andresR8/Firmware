@@ -78,7 +78,8 @@
  *
  */
 
-#define PX4_I2C_BUS_EXPANSION	1
+#define PX4_I2C_BUS_EXPANSION   1
+#define PX4_I2C_BUS_EXPANSION1  2
 #define PX4_I2C_BUS_ONBOARD	3
 
 #define PX4_I2C_OBDEV_HMC5883	0x1e
@@ -118,12 +119,12 @@
 /*
  * GPS
  */
-#define GPS_DEFAULT_UART_PORT	"/dev/ttyS2"
+#define GPS_DEFAULT_UART_PORT	"/dev/ttyS5"
 
 /*
  * RC Serial port
  */
-#define RC_SERIAL_PORT		"/dev/ttyS3"
+#define RC_SERIAL_PORT		"/dev/ttyS2"
 /* No invert support */
 #define INVERT_RC_INPUT(_invert_true)		while(0)
 

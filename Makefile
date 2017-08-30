@@ -138,10 +138,11 @@ define cmake-build
 +@(cd $(BUILD_DIR) && $(PX4_MAKE) $(PX4_MAKE_ARGS) $(ARGS))
 endef
 
+COLOR_BLUE = \033[0;34m
+NO_COLOR   = \033[m
+
 define colorecho
-+@tput setaf 6
-+@echo $1
-+@tput sgr0
++@echo "${COLOR_BLUE}${1} ${NO_COLOR}"
 endef
 
 # Get a list of all config targets.
@@ -299,12 +300,12 @@ s3put_coverage: tests_coverage
 
 check_format:
 	$(call colorecho,"Checking formatting with astyle")
-	@$(SRC_DIR)/Tools/check_code_style_all.sh
+	@$(SRC_DIR)/Tools/astyle/check_code_style_all.sh
 	@git diff --check
 
 format:
 	$(call colorecho,"Formatting with astyle")
-	@$(SRC_DIR)/Tools/check_code_style_all.sh --fix
+	@$(SRC_DIR)/Tools/astyle/check_code_style_all.sh --fix
 
 # Testing
 # --------------------------------------------------------------------

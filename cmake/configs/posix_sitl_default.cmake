@@ -51,7 +51,6 @@ set(config_module_list
 	lib/controllib/controllib_test
 	modules/mavlink/mavlink_tests
 	modules/mc_pos_control/mc_pos_control_tests
-	modules/unit_test
 	modules/uORB/uORB_tests
 	systemcmds/tests
 
@@ -104,6 +103,9 @@ set(config_module_list
 	modules/systemlib/mixer
 	modules/uORB
 
+        # micro RTPS
+        modules/micrortps_bridge/micrortps_client
+
 	#
 	# Libraries
 	#
@@ -142,6 +144,10 @@ set(config_module_list
 	examples/rover_steering_control
 
 	#
+	# HippoCampus example (AUV from TUHH)
+	examples/auv_hippocampus_example_app
+
+	#
 	# Segway
 	#
 	examples/segway
@@ -171,11 +177,22 @@ set(config_module_list
 
 	# EKF
 	examples/ekf_att_pos_estimator
+
+	# micro-RTPS
+	lib/micro-CDR
 )
 
 set(config_extra_builtin_cmds
 	serdis
 	sercon
+	)
+
+set(config_rtps_send_topics
+	sensor_baro
+	)
+
+set(config_rtps_receive_topics
+	sensor_combined
 	)
 
 # Default config_sitl_rcS_dir (posix_sitl_default), this is overwritten later
