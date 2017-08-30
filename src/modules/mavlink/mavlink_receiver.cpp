@@ -1098,7 +1098,7 @@ MavlinkReceiver::handle_message_set_actuator_control_target(mavlink_message_t *m
 			}
 
 			switch (set_actuator_control_target.group_mlx) {
-				case 0:
+			case 0:
 				if (_actuator_controls_pubs[0] == nullptr) {
 					_actuator_controls_pubs[0] = orb_advertise(ORB_ID(actuator_controls_0), &actuator_controls);
 				} else {
@@ -1107,7 +1107,7 @@ MavlinkReceiver::handle_message_set_actuator_control_target(mavlink_message_t *m
 
 				break;
 
-				case 1:
+			case 1:
 				if (_actuator_controls_pubs[1] == nullptr) {
 					_actuator_controls_pubs[1] = orb_advertise(ORB_ID(actuator_controls_1), &actuator_controls);
 
