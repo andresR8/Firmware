@@ -1097,18 +1097,6 @@ PARAM_DEFINE_FLOAT(RC18_DZ, 0.0f);
 PARAM_DEFINE_INT32(RC_RL1_DSM_VCC, 0); /* Relay 1 controls DSM VCC */
 
 /**
- * DSM binding trigger.
- *
- * @value -1 Inactive
- * @value 0 Start DSM2 bind
- * @value 1 Start DSMX bind
- * @min -1
- * @max 1
- * @group Radio Calibration
- */
-PARAM_DEFINE_INT32(RC_DSM_BIND, -1);
-
-/**
  * RC channel count
  *
  * This parameter is used by Ground Station software to save the number
@@ -2101,7 +2089,6 @@ PARAM_DEFINE_FLOAT(RC_LOITER_TH, 0.5f);
  */
 PARAM_DEFINE_FLOAT(RC_ACRO_TH, 0.5f);
 
-
 /**
  * Threshold for selecting offboard mode
  *
@@ -2119,7 +2106,6 @@ PARAM_DEFINE_FLOAT(RC_ACRO_TH, 0.5f);
  *
  */
 PARAM_DEFINE_FLOAT(RC_OFFB_TH, 0.5f);
-
 
 /**
  * Threshold for the kill switch
@@ -2228,64 +2214,6 @@ PARAM_DEFINE_FLOAT(RC_STAB_TH, 0.5f);
  *
  */
 PARAM_DEFINE_FLOAT(RC_MAN_TH, 0.5f);
-
-/**
- * PWM input channel that provides RSSI.
- *
- * 0: do not read RSSI from input channel
- * 1-18: read RSSI from specified input channel
- *
- * Specify the range for RSSI input with RC_RSSI_PWM_MIN and RC_RSSI_PWM_MAX parameters.
- *
- * @min 0
- * @max 18
- * @value 0 Unassigned
- * @value 1 Channel 1
- * @value 2 Channel 2
- * @value 3 Channel 3
- * @value 4 Channel 4
- * @value 5 Channel 5
- * @value 6 Channel 6
- * @value 7 Channel 7
- * @value 8 Channel 8
- * @value 9 Channel 9
- * @value 10 Channel 10
- * @value 11 Channel 11
- * @value 12 Channel 12
- * @value 13 Channel 13
- * @value 14 Channel 14
- * @value 15 Channel 15
- * @value 16 Channel 16
- * @value 17 Channel 17
- * @value 18 Channel 18
- * @group Radio Calibration
- *
- */
-PARAM_DEFINE_INT32(RC_RSSI_PWM_CHAN, 0);
-
-/**
- * Max input value for RSSI reading.
- *
- * Only used if RC_RSSI_PWM_CHAN > 0
- *
- * @min 0
- * @max 2000
- * @group Radio Calibration
- *
- */
-PARAM_DEFINE_INT32(RC_RSSI_PWM_MAX, 1000);
-
-/**
- * Min input value for RSSI reading.
- *
- * Only used if RC_RSSI_PWM_CHAN > 0
- *
- * @min 0
- * @max 2000
- * @group Radio Calibration
- *
- */
-PARAM_DEFINE_INT32(RC_RSSI_PWM_MIN, 2000);
 
 /**
  * Sample rate of the remote control values for the low pass filter on roll,pitch, yaw and throttle

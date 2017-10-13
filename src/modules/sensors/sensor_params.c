@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2012-2016 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2012-2017 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -815,6 +815,25 @@ PARAM_DEFINE_INT32(CAL_MAG_SIDES, 63);
 PARAM_DEFINE_INT32(CAL_BARO_PRIME, 0);
 
 /**
+ * Airspeed sensor pitot model
+ *
+ * @value 0 HB Pitot
+ *
+ * @group Sensor Calibration
+ */
+PARAM_DEFINE_INT32(CAL_AIR_PMODEL, 0);
+
+/**
+ * Airspeed sensor tube length
+ * @min 0.01
+ * @max 0.5
+ * @unit meter
+ *
+ * @group Sensor Calibration
+ */
+PARAM_DEFINE_FLOAT(CAL_AIR_TUBELEN, 0.2f);
+
+/**
  * Differential pressure sensor offset
  *
  * The offset (zero-reading) in Pascal
@@ -1088,27 +1107,32 @@ PARAM_DEFINE_INT32(SENS_EN_SF0X, 0);
 PARAM_DEFINE_INT32(SENS_EN_MB12XX, 0);
 
 /**
- * TeraRanger One (trone)
- *
- * @reboot_required true
- *
- * @boolean
- * @group Sensor Enable
- */
-PARAM_DEFINE_INT32(SENS_EN_TRONE, 0);
-
-/**
- * Lightware SF1xx laser rangefinder (i2c)
+ * TeraRanger Rangefinder (i2c)
  *
  * @reboot_required true
  * @min 0
- * @max 4
+ * @max 3
+ * @group Sensor Enable
+ * @value 0 Disabled
+ * @value 1 Autodetect
+ * @value 2 TROne
+ * @value 3 TREvo
+ */
+PARAM_DEFINE_INT32(SENS_EN_TRANGER, 0);
+
+/**
+ * Lightware SF1xx/SF20/LW20 laser rangefinder (i2c)
+ *
+ * @reboot_required true
+ * @min 0
+ * @max 5
  * @group Sensor Enable
  * @value 0 Disabled
  * @value 1 SF10/a
  * @value 2 SF10/b
  * @value 3 SF10/c
  * @value 4 SF11/c
+ * @value 5 SF/LW20
  */
 PARAM_DEFINE_INT32(SENS_EN_SF1XX, 0);
 
@@ -1120,3 +1144,33 @@ PARAM_DEFINE_INT32(SENS_EN_SF1XX, 0);
  * @group Sensor Enable
  */
 PARAM_DEFINE_INT32(SENS_EN_THERMAL, -1);
+
+/**
+* Driver level cut frequency for gyro
+*
+* The cut frequency for the 2nd order butterworth filter on the gyro driver. This features
+* is currently supported by the mpu6000 and mpu9250. This only affects the signal sent to the
+* controllers, not the estimators. 0 disables the filter.
+*
+* @min 5
+* @max 1000
+* @unit Hz
+* @reboot_required true
+* @group Sensor Calibration
+*/
+PARAM_DEFINE_FLOAT(IMU_GYRO_CUTOFF, 30.0f);
+
+/**
+* Driver level cut frequency for accel
+*
+* The cut frequency for the 2nd order butterworth filter on the accel driver. This features
+* is currently supported by the mpu6000 and mpu9250. This only affects the signal sent to the
+* controllers, not the estimators. 0 disables the filter.
+*
+* @min 5
+* @max 1000
+* @unit Hz
+* @reboot_required true
+* @group Sensor Calibration
+*/
+PARAM_DEFINE_FLOAT(IMU_ACCEL_CUTOFF, 30.0f);

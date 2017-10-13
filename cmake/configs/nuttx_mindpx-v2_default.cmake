@@ -2,8 +2,6 @@ include(nuttx/px4_impl_nuttx)
 
 px4_nuttx_configure(HWCLASS m4 CONFIG nsh ROMFS y ROMFSROOT px4fmu_common)
 
-set(CMAKE_TOOLCHAIN_FILE ${PX4_SOURCE_DIR}/cmake/toolchains/Toolchain-arm-none-eabi.cmake)
-
 set(config_uavcan_num_ifaces 1)
 
 set(config_module_list
@@ -16,8 +14,9 @@ set(config_module_list
 	drivers/stm32/tone_alarm
 	drivers/led
 	drivers/px4fmu
-	drivers/boards/mindpx-v2
+	drivers/boards
 	drivers/rgbled
+	#drivers/rgbled_pwm
 	drivers/mpu6000
 	drivers/mpu9250
 	drivers/lsm303d
@@ -31,7 +30,7 @@ set(config_module_list
 	drivers/sf0x
 	drivers/sf1xx
 	drivers/ll40ls
-	drivers/trone
+	drivers/teraranger
 	drivers/gps
 	drivers/pwm_out_sim
 	#drivers/hott
@@ -99,6 +98,7 @@ set(config_module_list
 	modules/gpio_led
 	modules/uavcan
 	modules/land_detector
+	modules/camera_feedback
 
 	#
 	# Estimation modules
@@ -134,6 +134,9 @@ set(config_module_list
 	modules/uORB
 	modules/dataman
 
+	# micro RTPS
+	modules/micrortps_bridge/micrortps_client
+
 	#
 	# Libraries
 	#
@@ -154,7 +157,6 @@ set(config_module_list
 	lib/version
 	lib/DriverFramework/framework
 	platforms/nuttx
-	lib/micro-CDR
 
 	# had to add for cmake, not sure why wasn't in original config
 	platforms/common
@@ -197,19 +199,10 @@ set(config_module_list
 	#examples/ekf_att_pos_estimator
 )
 
-set(config_extra_builtin_cmds
-	serdis
-	sercon
-	)
+set(config_rtps_send_topics
+   sensor_combined
+   )
 
-add_custom_target(sercon)
-set_target_properties(sercon PROPERTIES
-	PRIORITY "SCHED_PRIORITY_DEFAULT"
-	MAIN "sercon"
-	STACK_MAIN "2048")
-
-add_custom_target(serdis)
-set_target_properties(serdis PROPERTIES
-	PRIORITY "SCHED_PRIORITY_DEFAULT"
-	MAIN "serdis"
-	STACK_MAIN "2048")
+set(config_rtps_receive_topics
+   sensor_baro
+   )

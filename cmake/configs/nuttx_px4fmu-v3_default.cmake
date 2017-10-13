@@ -1,8 +1,5 @@
 include(nuttx/px4_impl_nuttx)
-
-px4_nuttx_configure(HWCLASS m4 CONFIG nsh ROMFS y ROMFSROOT px4fmu_common)
-
-set(CMAKE_TOOLCHAIN_FILE ${PX4_SOURCE_DIR}/cmake/toolchains/Toolchain-arm-none-eabi.cmake)
+px4_nuttx_configure(HWCLASS m4 CONFIG nsh ROMFS y ROMFSROOT px4fmu_common IO px4io-v2)
 
 set(config_uavcan_num_ifaces 2)
 
@@ -14,7 +11,7 @@ set(config_module_list
 	drivers/blinkm
 	drivers/bmi160
 	drivers/bmp280
-	drivers/boards/px4fmu-v2
+	drivers/boards
 	drivers/bst
 	drivers/camera_trigger
 	drivers/device
@@ -54,7 +51,7 @@ set(config_module_list
 	drivers/stm32/adc
 	drivers/stm32/tone_alarm
 	drivers/tap_esc
-	drivers/trone
+	drivers/teraranger
 	drivers/vmount
 	modules/sensors
 
@@ -162,7 +159,6 @@ set(config_module_list
 	lib/tailsitter_recovery
 	lib/terrain_estimation
 	lib/version
-	lib/micro-CDR
 
 	#
 	# Platform
@@ -220,26 +216,3 @@ set(config_rtps_send_topics
 set(config_rtps_receive_topics
    sensor_baro
    )
-
-set(config_extra_builtin_cmds
-	serdis
-	sercon
-	)
-
-set(config_io_board
-	px4io-v2
-	)
-
-add_custom_target(sercon)
-set_target_properties(sercon PROPERTIES
-	PRIORITY "SCHED_PRIORITY_DEFAULT"
-	MAIN "sercon"
-	STACK_MAIN "2048"
-	COMPILE_FLAGS "-Os")
-
-add_custom_target(serdis)
-set_target_properties(serdis PROPERTIES
-	PRIORITY "SCHED_PRIORITY_DEFAULT"
-	MAIN "serdis"
-	STACK_MAIN "2048"
-	COMPILE_FLAGS "-Os")

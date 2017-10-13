@@ -34,7 +34,7 @@ set(config_module_list
 	drivers/pwm_out_sim
 	drivers/rgbled
 	drivers/led
-	drivers/boards/sitl
+	drivers/boards
 	drivers/qshell/posix
 
 	systemcmds/param
@@ -82,7 +82,6 @@ set(config_module_list
 	lib/tailsitter_recovery
 	lib/version
 	lib/DriverFramework/framework
-	lib/micro-CDR
 
 	platforms/common
 	platforms/posix/px4_layer

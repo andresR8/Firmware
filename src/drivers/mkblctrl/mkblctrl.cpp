@@ -241,7 +241,6 @@ MK::MK(int bus, const char *_device_path) :
 	strncpy(_device, _device_path, sizeof(_device));
 	/* enforce null termination */
 	_device[sizeof(_device) - 1] = '\0';
-	_debug_enabled = true;
 }
 
 MK::~MK()
@@ -539,7 +538,7 @@ MK::task_main()
 				if (_mixers != nullptr) {
 
 					/* do mixing */
-					outputs.noutputs = _mixers->mix(&outputs.output[0], _num_outputs, NULL);
+					outputs.noutputs = _mixers->mix(&outputs.output[0], _num_outputs);
 					outputs.timestamp = hrt_absolute_time();
 
 					/* iterate actuators */
@@ -779,7 +778,7 @@ MK::mk_servo_set(unsigned int chan, short val)
 			if (OK == transfer(&msg[0], 1, &result[0], 2)) {
 				Motor[chan].Current = result[0];
 				Motor[chan].MaxPWM = result[1];
-				Motor[chan].Temperature = 255;;
+				Motor[chan].Temperature = 255;
 
 			} else {
 				if ((Motor[chan].State & MOTOR_STATE_ERROR_MASK) < MOTOR_STATE_ERROR_MASK) { Motor[chan].State++; }	// error

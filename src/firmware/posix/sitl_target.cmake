@@ -1,7 +1,6 @@
 
 function(px4_add_sitl_app)
-px4_parse_function_args(
-			NAME px4_add_sitl_app
+px4_parse_function_args(NAME px4_add_sitl_app
 			ONE_VALUE APP_NAME MAIN_SRC UPLOAD_NAME
 			REQUIRED APP_NAME MAIN_SRC
 			ARGN ${ARGN}
@@ -27,7 +26,6 @@ px4_parse_function_args(
 			pthread m
 			)
 	endif()
-
 endfunction()
 
 #=============================================================================
@@ -63,6 +61,9 @@ add_custom_target(run_config
 		DEPENDS px4 logs_symlink
 		)
 
+# Add support for external project building
+include(ExternalProject)
+
 # project to build sitl_gazebo if necessary
 ExternalProject_Add(sitl_gazebo
 	SOURCE_DIR ${PX4_SOURCE_DIR}/Tools/sitl_gazebo
@@ -80,7 +81,7 @@ ExternalProject_Add_Step(sitl_gazebo forceconfigure
 # create targets for each viewer/model/debugger combination
 set(viewers none jmavsim gazebo replay)
 set(debuggers none ide gdb lldb ddd valgrind callgrind)
-set(models none iris iris_opt_flow iris_rplidar standard_vtol plane solo tailsitter typhoon_h480 rover)
+set(models none iris iris_opt_flow iris_rplidar standard_vtol plane solo tailsitter typhoon_h480 rover hippocampus)
 set(all_posix_vmd_make_targets)
 foreach(viewer ${viewers})
 	foreach(debugger ${debuggers})

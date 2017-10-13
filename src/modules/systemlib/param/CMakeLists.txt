@@ -72,6 +72,7 @@ add_custom_command(OUTPUT ${parameters_xml}
 		--overrides ${PARAM_DEFAULT_OVERRIDES}
 	DEPENDS ${param_src_files} ${PX4_SOURCE_DIR}/Tools/px_process_params.py
 	WORKING_DIRECTORY ${PX4_BINARY_DIR}
+	COMMENT "Generating parameters.xml"
 )
 add_custom_target(parameters_xml DEPENDS ${parameters_xml})
 
@@ -91,6 +92,7 @@ set_source_files_properties(px4_parameters.h PROPERTIES GENERATED TRUE)
 px4_add_module(
 	MODULE modules__systemlib__param
 	COMPILE_FLAGS
+		-Wno-sign-compare # TODO: fix all sign-compare
 	INCLUDES
 		${CMAKE_CURRENT_BINARY_DIR}
 	SRCS

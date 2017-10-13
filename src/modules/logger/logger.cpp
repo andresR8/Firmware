@@ -208,13 +208,20 @@ int Logger::print_status()
 {
 	PX4_INFO("Running in mode: %s", configured_backend_mode());
 
+	bool is_logging = false;
 	if (_writer.is_started(LogWriter::BackendFile)) {
 		PX4_INFO("File Logging Running");
 		print_statistics();
+		is_logging = true;
 	}
 
 	if (_writer.is_started(LogWriter::BackendMavlink)) {
 		PX4_INFO("Mavlink Logging Running");
+		is_logging = true;
+	}
+
+	if (!is_logging) {
+		PX4_INFO("Not logging");
 	}
 
 	return 0;
@@ -536,54 +543,60 @@ void Logger::add_common_topics()
 	add_topic("actuator_controls_0", 100);
 	add_topic("actuator_controls_1", 100);
 	add_topic("actuator_outputs", 100);
-	add_topic("airspeed");
+	add_topic("airspeed", 200);
 	add_topic("att_pos_mocap", 50);
-	add_topic("battery_status", 300);
+	add_topic("battery_status", 500);
 	add_topic("camera_capture");
 	add_topic("camera_trigger");
-	add_topic("commander_state", 100);
-	add_topic("control_state", 100);
+	add_topic("commander_state", 200);
 	add_topic("cpuload");
-	add_topic("differential_pressure", 50);
-	add_topic("distance_sensor");
-	add_topic("ekf2_innovations", 50);
+	add_topic("distance_sensor", 100);
+	add_topic("ekf2_innovations", 200);
 	add_topic("esc_status", 250);
-	add_topic("estimator_status", 200); //this one is large
-	add_topic("gps_dump"); //this will only be published if gps_dump_comm is set
-	add_topic("input_rc", 100);
+	add_topic("estimator_status", 200);
+	add_topic("input_rc", 200);
+	add_topic("manual_control_setpoint", 200);
 	add_topic("optical_flow", 50);
 	add_topic("position_setpoint_triplet", 200);
-	add_topic("rc_channels", 100);
-	add_topic("satellite_info");
+	add_topic("rc_channels", 200);
 	add_topic("sensor_combined", 100);
-	add_topic("sensor_preflight", 50);
-	add_topic("system_power", 300);
-	add_topic("task_stack_info");
-	add_topic("tecs_status", 20);
+	add_topic("sensor_preflight", 200);
+	add_topic("system_power", 500);
+	add_topic("tecs_status", 200);
 	add_topic("telemetry_status");
 	add_topic("vehicle_attitude", 30);
-	add_topic("vehicle_attitude_setpoint", 30);
+	add_topic("vehicle_attitude_setpoint", 100);
 	add_topic("vehicle_command");
 	add_topic("vehicle_global_position", 200);
-	add_topic("arm_auth_request");
-	add_topic("arm_auth_ack");
 	add_topic("vehicle_gps_position");
 	add_topic("vehicle_land_detected");
 	add_topic("vehicle_local_position", 100);
 	add_topic("vehicle_local_position_setpoint", 100);
 	add_topic("vehicle_rates_setpoint", 30);
-	add_topic("vehicle_status");
+	add_topic("vehicle_status", 200);
 	add_topic("vehicle_vision_attitude");
 	add_topic("vehicle_vision_position");
-	add_topic("vtol_vehicle_status", 100);
-	add_topic("wind_estimate", 100);
+	add_topic("vtol_vehicle_status", 200);
+	add_topic("wind_estimate", 200);
 }
 
 void Logger::add_estimator_replay_topics()
 {
 	// for estimator replay (need to be at full rate)
 	add_topic("ekf2_timestamps");
+
+	// current EKF2 subscriptions
+	add_topic("airspeed");
+	add_topic("distance_sensor");
+	add_topic("optical_flow");
+	add_topic("sensor_baro");
 	add_topic("sensor_combined");
+	add_topic("sensor_selection");
+	add_topic("vehicle_gps_position");
+	add_topic("vehicle_land_detected");
+	add_topic("vehicle_status");
+	add_topic("vehicle_vision_attitude");
+	add_topic("vehicle_vision_position");
 }
 
 void Logger::add_thermal_calibration_topics()
@@ -1185,7 +1198,7 @@ bool Logger::file_exist(const char *filename)
 
 int Logger::get_log_file_name(char *file_name, size_t file_name_size)
 {
-	tm tt;
+	tm tt = {};
 	bool time_ok = false;
 
 	if (_log_name_timestamp) {
@@ -1274,7 +1287,7 @@ bool Logger::get_log_time(struct tm *tt, bool boot_time)
 
 	if (use_clock_time) {
 		/* take clock time if there's no fix (yet) */
-		struct timespec ts;
+		struct timespec ts = {};
 		px4_clock_gettime(CLOCK_REALTIME, &ts);
 		utc_time_sec = ts.tv_sec + (ts.tv_nsec / 1e9);
 
@@ -1411,7 +1424,7 @@ void Logger::perf_iterate_callback(perf_counter_t handle, void *user)
 
 void Logger::write_perf_data(bool preflight)
 {
-	perf_callback_data_t callback_data;
+	perf_callback_data_t callback_data = {};
 	callback_data.logger = this;
 	callback_data.counter = 0;
 	callback_data.preflight = preflight;
@@ -1457,7 +1470,7 @@ void Logger::initialize_load_output()
 
 void Logger::write_load_output(bool preflight)
 {
-	perf_callback_data_t callback_data;
+	perf_callback_data_t callback_data = {};
 	char buffer[140];
 	callback_data.logger = this;
 	callback_data.counter = 0;
@@ -1474,7 +1487,7 @@ void Logger::write_load_output(bool preflight)
 void Logger::write_formats()
 {
 	_writer.lock();
-	ulog_message_format_s msg;
+	ulog_message_format_s msg = {};
 	const orb_metadata **topics = orb_get_topics();
 
 	//write all known formats
@@ -1532,7 +1545,7 @@ void Logger::write_add_logged_msg(LoggerSubscription &subscription, int instance
 void Logger::write_info(const char *name, const char *value)
 {
 	_writer.lock();
-	ulog_message_info_header_s msg;
+	ulog_message_info_header_s msg = {};
 	uint8_t *buffer = reinterpret_cast<uint8_t *>(&msg);
 	msg.msg_type = static_cast<uint8_t>(ULogMessageType::INFO);
 
@@ -1595,7 +1608,7 @@ template<typename T>
 void Logger::write_info_template(const char *name, T value, const char *type_str)
 {
 	_writer.lock();
-	ulog_message_info_header_s msg;
+	ulog_message_info_header_s msg = {};
 	uint8_t *buffer = reinterpret_cast<uint8_t *>(&msg);
 	msg.msg_type = static_cast<uint8_t>(ULogMessageType::INFO);
 
@@ -1616,7 +1629,7 @@ void Logger::write_info_template(const char *name, T value, const char *type_str
 
 void Logger::write_header()
 {
-	ulog_file_header_s header;
+	ulog_file_header_s header = {};
 	header.magic[0] = 'U';
 	header.magic[1] = 'L';
 	header.magic[2] = 'o';
@@ -1646,6 +1659,12 @@ void Logger::write_version()
 {
 	write_info("ver_sw", px4_firmware_version_string());
 	write_info("ver_sw_release", px4_firmware_version());
+	uint32_t vendor_version = px4_firmware_vendor_version();
+
+	if (vendor_version > 0) {
+		write_info("ver_vendor_sw_release", vendor_version);
+	}
+
 	write_info("ver_hw", px4_board_name());
 	write_info("sys_name", "PX4");
 	write_info("sys_os_name", px4_os_name());
@@ -1705,7 +1724,7 @@ void Logger::write_version()
 void Logger::write_parameters()
 {
 	_writer.lock();
-	ulog_message_parameter_header_s msg;
+	ulog_message_parameter_header_s msg = {};
 	uint8_t *buffer = reinterpret_cast<uint8_t *>(&msg);
 
 	msg.msg_type = static_cast<uint8_t>(ULogMessageType::PARAMETER);
@@ -1762,7 +1781,7 @@ void Logger::write_parameters()
 void Logger::write_changed_parameters()
 {
 	_writer.lock();
-	ulog_message_parameter_header_s msg;
+	ulog_message_parameter_header_s msg = {};
 	uint8_t *buffer = reinterpret_cast<uint8_t *>(&msg);
 
 	msg.msg_type = static_cast<uint8_t>(ULogMessageType::PARAMETER);
@@ -2006,7 +2025,7 @@ void Logger::ack_vehicle_command(orb_advert_t &vehicle_command_ack_pub, vehicle_
 		.result_param2 = 0,
 		.command = cmd->command,
 		.result = (uint8_t)result,
-		.from_external = 0,
+		.from_external = false,
 		.result_param1 = 0,
 		.target_system = cmd->source_system,
 		.target_component = cmd->source_component
@@ -2022,5 +2041,5 @@ void Logger::ack_vehicle_command(orb_advert_t &vehicle_command_ack_pub, vehicle_
 
 }
 
-}
-}
+} // namespace logger
+} // namespace px4

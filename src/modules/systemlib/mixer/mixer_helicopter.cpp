@@ -234,7 +234,7 @@ HelicopterMixer::from_text(Mixer::ControlCallback control_cb, uintptr_t cb_handl
 }
 
 unsigned
-HelicopterMixer::mix(float *outputs, unsigned space, uint16_t *status_reg)
+HelicopterMixer::mix(float *outputs, unsigned space)
 {
 	/* Find index to use for curves */
 	float thrust_cmd = get_control(0, 3);
@@ -252,7 +252,7 @@ HelicopterMixer::mix(float *outputs, unsigned space, uint16_t *status_reg)
 	/* Local throttle curve gradient and offset */
 	float tg = (_mixer_info.throttle_curve[idx + 1] - _mixer_info.throttle_curve[idx]) / 0.25f;
 	float to = (_mixer_info.throttle_curve[idx]) - (tg * idx * 0.25f);
-	float throttle = constrain((tg * thrust_cmd + to), 0.0f, 1.0f);
+	float throttle = constrain(2.0f * (tg * thrust_cmd + to) - 1.0f, -1.0f, 1.0f);
 
 	/* Local pitch curve gradient and offset */
 	float pg = (_mixer_info.pitch_curve[idx + 1] - _mixer_info.pitch_curve[idx]) / 0.25f;

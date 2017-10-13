@@ -106,13 +106,7 @@ public:
 	 */
 	void		publish_geofence_result();
 
-	/**
-	 * Publish the attitude sp, only to be used in very special modes when position control is deactivated
-	 * Example: mode that is triggered on gps failure
-	 */
-	void		publish_att_sp();
-
-	void		publish_vehicle_cmd(const struct vehicle_command_s &vcmd);
+	void		publish_vehicle_cmd(vehicle_command_s *vcmd);
 
 	/**
 	 * Setters
@@ -130,18 +124,20 @@ public:
 	struct position_setpoint_triplet_s *get_position_setpoint_triplet() { return &_pos_sp_triplet; }
 	struct position_setpoint_triplet_s *get_reposition_triplet() { return &_reposition_triplet; }
 	struct position_setpoint_triplet_s *get_takeoff_triplet() { return &_takeoff_triplet; }
-	struct vehicle_attitude_setpoint_s *get_att_sp() { return &_att_sp; }
 	struct vehicle_global_position_s *get_global_position() { return &_global_pos; }
-	struct vehicle_gps_position_s *get_gps_position() { return &_gps_pos; }
 	struct vehicle_land_detected_s *get_land_detected() { return &_land_detected; }
 	struct vehicle_local_position_s *get_local_position() { return &_local_pos; }
 	struct vehicle_status_s *get_vstatus() { return &_vstatus; }
+
+	const vehicle_roi_s &get_vroi() { return _vroi; }
 
 	bool home_position_valid() { return (_home_pos.timestamp > 0); }
 
 	int		get_onboard_mission_sub() { return _onboard_mission_sub; }
 	int		get_offboard_mission_sub() { return _offboard_mission_sub; }
+
 	Geofence	&get_geofence() { return _geofence; }
+
 	bool		get_can_loiter_at_sp() { return _can_loiter_at_sp; }
 	float		get_loiter_radius() { return _param_loiter_radius.get(); }
 
@@ -189,6 +185,12 @@ public:
 	 */
 	void		reset_cruising_speed();
 
+
+	/**
+	 *  Set triplets to invalid
+	 */
+	void 		reset_triplets();
+
 	/**
 	 * Get the target throttle
 	 *
@@ -209,6 +211,7 @@ public:
 	 * @return the distance at which the next waypoint should be used
 	 */
 	float		get_acceptance_radius(float mission_item_radius);
+
 	orb_advert_t	*get_mavlink_log_pub() { return &_mavlink_log_pub; }
 
 	void		increment_mission_instance_count() { _mission_instance_count++; }
@@ -224,8 +227,6 @@ private:
 	bool		_task_should_exit{false};	/**< if true, sensor task should exit */
 	int		_navigator_task{-1};		/**< task handle for sensor task */
 
-	orb_advert_t	_mavlink_log_pub{nullptr};	/**< the uORB advert to send messages over mavlink */
-
 	int		_fw_pos_ctrl_status_sub{-1};	/**< notification of vehicle capabilities updates */
 	int		_global_pos_sub{-1};		/**< global position subscription */
 	int		_gps_pos_sub{-1};		/**< gps position subscription */
@@ -239,26 +240,31 @@ private:
 	int		_vehicle_command_sub{-1};	/**< vehicle commands (onboard and offboard) */
 	int		_vstatus_sub{-1};		/**< vehicle status subscription */
 
-	orb_advert_t	_att_sp_pub{nullptr};
 	orb_advert_t	_geofence_result_pub{nullptr};
+	orb_advert_t	_mavlink_log_pub{nullptr};	/**< the uORB advert to send messages over mavlink */
 	orb_advert_t	_mission_result_pub{nullptr};
 	orb_advert_t	_pos_sp_triplet_pub{nullptr};
+	orb_advert_t	_vehicle_cmd_ack_pub{nullptr};
 	orb_advert_t	_vehicle_cmd_pub{nullptr};
+	orb_advert_t	_vehicle_roi_pub{nullptr};
 
+	// Subscriptions
 	fw_pos_ctrl_status_s				_fw_pos_ctrl_status{};	/**< fixed wing navigation capabilities */
-	geofence_result_s				_geofence_result{};
 	home_position_s					_home_pos{};		/**< home position for RTL */
 	mission_result_s				_mission_result{};
-	position_setpoint_triplet_s			_pos_sp_triplet{};	/**< triplet of position setpoints */
-	position_setpoint_triplet_s			_reposition_triplet{};	/**< triplet for non-mission direct position command */
-	position_setpoint_triplet_s			_takeoff_triplet{};	/**< triplet for non-mission direct takeoff command */
 	sensor_combined_s				_sensor_combined{};	/**< sensor values */
-	vehicle_attitude_setpoint_s			_att_sp{};
 	vehicle_global_position_s			_global_pos{};		/**< global vehicle position */
 	vehicle_gps_position_s				_gps_pos{};		/**< gps position */
 	vehicle_land_detected_s				_land_detected{};	/**< vehicle land_detected */
 	vehicle_local_position_s			_local_pos{};		/**< local vehicle position */
 	vehicle_status_s				_vstatus{};		/**< vehicle status */
+
+	// Publications
+	geofence_result_s				_geofence_result{};
+	position_setpoint_triplet_s			_pos_sp_triplet{};	/**< triplet of position setpoints */
+	position_setpoint_triplet_s			_reposition_triplet{};	/**< triplet for non-mission direct position command */
+	position_setpoint_triplet_s			_takeoff_triplet{};	/**< triplet for non-mission direct takeoff command */
+	vehicle_roi_s					_vroi{};		/**< vehicle ROI */
 
 	int		_mission_instance_count{-1};	/**< instance count for the current mission */
 
@@ -318,11 +324,6 @@ private:
 	void		task_main();
 
 	/**
-	 * Translate mission item to a position setpoint.
-	 */
-	void		mission_item_to_position_setpoint(const mission_item_s *item, position_setpoint_s *sp);
-
-	/**
 	 * Publish a new position setpoint triplet for position controllers
 	 */
 	void		publish_position_setpoint_triplet();
@@ -331,5 +332,7 @@ private:
 	 * Publish the mission result so commander and mavlink know what is going on
 	 */
 	void		publish_mission_result();
+
+	void		publish_vehicle_command_ack(const vehicle_command_s &cmd, uint8_t result);
 };
 #endif

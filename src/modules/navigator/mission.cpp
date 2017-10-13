@@ -145,13 +145,12 @@ void
 Mission::on_inactivation()
 {
 	// Disable camera trigger
-	vehicle_command_s cmd{};
+	vehicle_command_s cmd = {};
 	cmd.command = vehicle_command_s::VEHICLE_CMD_DO_TRIGGER_CONTROL;
 	// Pause trigger
 	cmd.param1 = -1.0f;
 	cmd.param3 = 1.0f;
-	cmd.timestamp = hrt_absolute_time();
-	_navigator->publish_vehicle_cmd(cmd);
+	_navigator->publish_vehicle_cmd(&cmd);
 }
 
 void
@@ -160,13 +159,12 @@ Mission::on_activation()
 	set_mission_items();
 
 	// unpause triggering if it was paused
-	vehicle_command_s cmd{};
+	vehicle_command_s cmd = {};
 	cmd.command = vehicle_command_s::VEHICLE_CMD_DO_TRIGGER_CONTROL;
 	// unpause trigger
 	cmd.param1 = -1.0f;
 	cmd.param3 = 0.0f;
-	cmd.timestamp = hrt_absolute_time();
-	_navigator->publish_vehicle_cmd(cmd);
+	_navigator->publish_vehicle_cmd(&cmd);
 }
 
 void
@@ -303,6 +301,9 @@ Mission::find_offboard_land_start()
 void
 Mission::update_onboard_mission()
 {
+	/* reset triplets */
+	_navigator->reset_triplets();
+
 	if (orb_copy(ORB_ID(onboard_mission), _navigator->get_onboard_mission_sub(), &_onboard_mission) == OK) {
 		/* accept the current index set by the onboard mission if it is within bounds */
 		if (_onboard_mission.current_seq >= 0
@@ -349,6 +350,9 @@ void
 Mission::update_offboard_mission()
 {
 	bool failed = true;
+
+	/* reset triplets */
+	_navigator->reset_triplets();
 
 	if (orb_copy(ORB_ID(offboard_mission), _navigator->get_offboard_mission_sub(), &_offboard_mission) == OK) {
 		// The following is not really a warning, but it can be useful to have this message in the log file
@@ -504,7 +508,8 @@ Mission::set_mission_items()
 
 		/* update position setpoint triplet  */
 		pos_sp_triplet->previous.valid = false;
-		mission_item_to_position_setpoint(&_mission_item, &pos_sp_triplet->current);
+		mission_apply_limitation(_mission_item);
+		mission_item_to_position_setpoint(_mission_item, &pos_sp_triplet->current);
 		pos_sp_triplet->next.valid = false;
 
 		/* reuse setpoint for LOITER only if it's not IDLE */
@@ -536,7 +541,7 @@ Mission::set_mission_items()
 	/*********************************** handle mission item *********************************************/
 
 	/* handle position mission items */
-	if (item_contains_position(&_mission_item)) {
+	if (item_contains_position(_mission_item)) {
 
 		/* force vtol land */
 		if (_mission_item.nav_cmd == NAV_CMD_LAND && _param_force_vtol.get() == 1
@@ -760,7 +765,8 @@ Mission::set_mission_items()
 			set_align_mission_item(&_mission_item, &mission_item_next_position);
 
 			/* set position setpoint to target during the transition */
-			mission_item_to_position_setpoint(&mission_item_next_position, &pos_sp_triplet->current);
+			mission_apply_limitation(_mission_item);
+			mission_item_to_position_setpoint(mission_item_next_position, &pos_sp_triplet->current);
 		}
 
 		/* yaw is aligned now */
@@ -802,10 +808,11 @@ Mission::set_mission_items()
 	/*********************************** set setpoints and check next *********************************************/
 
 	/* set current position setpoint from mission item (is protected against non-position items) */
-	mission_item_to_position_setpoint(&_mission_item, &pos_sp_triplet->current);
+	mission_apply_limitation(_mission_item);
+	mission_item_to_position_setpoint(_mission_item, &pos_sp_triplet->current);
 
 	/* issue command if ready (will do nothing for position mission items) */
-	issue_command(&_mission_item);
+	issue_command(_mission_item);
 
 	/* set current work item type */
 	_work_item_type = new_work_item_type;
@@ -828,7 +835,8 @@ Mission::set_mission_items()
 		/* try to process next mission item */
 		if (has_next_position_item) {
 			/* got next mission item, update setpoint triplet */
-			mission_item_to_position_setpoint(&mission_item_next_position, &pos_sp_triplet->next);
+			mission_apply_limitation(_mission_item);
+			mission_item_to_position_setpoint(mission_item_next_position, &pos_sp_triplet->next);
 
 		} else {
 			/* next mission item is not available */
@@ -1018,6 +1026,12 @@ Mission::heading_sp_update()
 			point_to_latlon[0] = _navigator->get_home_position()->lat;
 			point_to_latlon[1] = _navigator->get_home_position()->lon;
 
+		} else if (_param_yawmode.get() == MISSION_YAWMODE_TO_ROI
+			   && _navigator->get_vroi().mode == vehicle_roi_s::ROI_LOCATION) {
+			/* target location is ROI */
+			point_to_latlon[0] = _navigator->get_vroi().lat;
+			point_to_latlon[1] = _navigator->get_vroi().lon;
+
 		} else {
 			/* target location is next (current) waypoint */
 			point_to_latlon[0] = pos_sp_triplet->current.lat;
@@ -1058,11 +1072,15 @@ Mission::altitude_sp_foh_update()
 	struct position_setpoint_triplet_s *pos_sp_triplet = _navigator->get_position_setpoint_triplet();
 
 	/* Don't change setpoint if last and current waypoint are not valid
-	 * or if the previous altitude isn't from a position or loiter setpoint
+	 * or if the previous altitude isn't from a position or loiter setpoint or
+	 * if rotary wing since that is handled in the mc_pos_control
 	 */
+
+
 	if (!pos_sp_triplet->previous.valid || !pos_sp_triplet->current.valid || !PX4_ISFINITE(pos_sp_triplet->previous.alt)
 	    || !(pos_sp_triplet->previous.type == position_setpoint_s::SETPOINT_TYPE_POSITION ||
-		 pos_sp_triplet->previous.type == position_setpoint_s::SETPOINT_TYPE_LOITER)) {
+		 pos_sp_triplet->previous.type == position_setpoint_s::SETPOINT_TYPE_LOITER) ||
+	    _navigator->get_vstatus()->is_rotary_wing) {
 
 		return;
 	}
@@ -1113,8 +1131,10 @@ Mission::altitude_sp_foh_update()
 		pos_sp_triplet->current.alt = a + grad * _min_current_sp_distance_xy;
 	}
 
+
 	// we set altitude directly so we can run this in parallel to the heading update
 	_navigator->set_position_setpoint_triplet_updated();
+
 }
 
 void
@@ -1167,7 +1187,8 @@ Mission::do_abort_landing()
 	_mission_item.origin = ORIGIN_ONBOARD;
 
 	struct position_setpoint_triplet_s *pos_sp_triplet = _navigator->get_position_setpoint_triplet();
-	mission_item_to_position_setpoint(&_mission_item, &pos_sp_triplet->current);
+	mission_apply_limitation(_mission_item);
+	mission_item_to_position_setpoint(_mission_item, &pos_sp_triplet->current);
 	_navigator->set_position_setpoint_triplet_updated();
 
 	mavlink_and_console_log_info(_navigator->get_mavlink_log_pub(), "Holding at %dm above landing.",
@@ -1186,8 +1207,7 @@ Mission::do_abort_landing()
 
 	// send reposition cmd to get out of mission
 	vehicle_command_s vcmd = {};
-	mission_item_to_vehicle_command(&_mission_item, &vcmd);
-	vcmd.timestamp = hrt_absolute_time();
+
 	vcmd.command = vehicle_command_s::VEHICLE_CMD_DO_REPOSITION;
 	vcmd.param1 = -1;
 	vcmd.param2 = 1;
@@ -1195,7 +1215,7 @@ Mission::do_abort_landing()
 	vcmd.param6 = _mission_item.lon;
 	vcmd.param7 = alt_sp;
 
-	_navigator->publish_vehicle_cmd(vcmd);
+	_navigator->publish_vehicle_cmd(&vcmd);
 }
 
 bool
@@ -1212,7 +1232,7 @@ Mission::prepare_mission_items(bool onboard, struct mission_item_s *mission_item
 		/* trying to find next position mission item */
 		while (read_mission_item(onboard, offset, next_position_mission_item)) {
 
-			if (item_contains_position(next_position_mission_item)) {
+			if (item_contains_position(*next_position_mission_item)) {
 				*has_next_position_item = true;
 				break;
 			}

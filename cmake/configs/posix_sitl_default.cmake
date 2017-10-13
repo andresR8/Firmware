@@ -3,13 +3,19 @@ include(posix/px4_impl_posix)
 set(CMAKE_TOOLCHAIN_FILE ${PX4_SOURCE_DIR}/cmake/toolchains/Toolchain-native.cmake)
 
 set(config_module_list
-	drivers/boards/sitl
+	drivers/boards
 	drivers/camera_trigger
 	drivers/device
 	drivers/gps
 	drivers/pwm_out_sim
 	drivers/vmount
 	drivers/linux_gpio
+	drivers/airspeed
+	drivers/ets_airspeed
+	drivers/ms4525_airspeed
+	drivers/ms5525_airspeed
+	drivers/sdp3x_airspeed
+
 	modules/sensors
 	platforms/posix/drivers/accelsim
 	platforms/posix/drivers/adcsim
@@ -54,6 +60,12 @@ set(config_module_list
 	modules/uORB/uORB_tests
 	systemcmds/tests
 
+	platforms/posix/tests/hello
+	platforms/posix/tests/hrt_test
+	platforms/posix/tests/muorb
+	platforms/posix/tests/vcdev_test
+	platforms/posix/tests/wqueue
+
 	#
 	# General system control
 	#
@@ -73,7 +85,6 @@ set(config_module_list
 	#
 	modules/attitude_estimator_q
 	modules/ekf2
-	modules/ekf2_replay
 	modules/local_position_estimator
 	modules/position_estimator_inav
 
@@ -103,8 +114,8 @@ set(config_module_list
 	modules/systemlib/mixer
 	modules/uORB
 
-        # micro RTPS
-        modules/micrortps_bridge/micrortps_client
+	# micro RTPS
+	modules/micrortps_bridge/micrortps_client
 
 	#
 	# Libraries
@@ -145,7 +156,8 @@ set(config_module_list
 
 	#
 	# HippoCampus example (AUV from TUHH)
-	examples/auv_hippocampus_example_app
+	#
+	examples/uuv_example_app
 
 	#
 	# Segway
@@ -179,13 +191,7 @@ set(config_module_list
 	examples/ekf_att_pos_estimator
 
 	# micro-RTPS
-	lib/micro-CDR
 )
-
-set(config_extra_builtin_cmds
-	serdis
-	sercon
-	)
 
 set(config_rtps_send_topics
 	sensor_baro
@@ -224,4 +230,3 @@ if(REPLAY_FILE)
 	message("Building with uorb publisher rules support")
 	add_definitions(-DORB_USE_PUBLISHER_RULES)
 endif()
-

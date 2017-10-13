@@ -254,7 +254,7 @@ void Simulator::update_sensors(mavlink_hil_sensor_t *imu)
 
 	RawAirspeedData airspeed = {};
 	airspeed.temperature = imu->temperature;
-	airspeed.diff_pressure = imu->diff_pressure + 0.001f * (hrt_absolute_time() & 0x01);;
+	airspeed.diff_pressure = imu->diff_pressure + 0.001f * (hrt_absolute_time() & 0x01);
 
 	write_airspeed_data(&airspeed);
 }
@@ -462,7 +462,6 @@ void Simulator::handle_message(mavlink_message_t *msg, bool publish)
 		{
 			hil_gpos.timestamp = timestamp;
 
-			hil_gpos.time_utc_usec = timestamp;
 			hil_gpos.lat = hil_state.lat / 1E7;//1E7
 			hil_gpos.lon = hil_state.lon / 1E7;//1E7
 			hil_gpos.alt = hil_state.alt / 1E3;//1E3
@@ -491,7 +490,7 @@ void Simulator::handle_message(mavlink_message_t *msg, bool publish)
 				_hil_ref_timestamp = timestamp;
 				_hil_ref_lat = lat;
 				_hil_ref_lon = lon;
-				_hil_ref_alt = hil_state.alt / 1000.0f;;
+				_hil_ref_alt = hil_state.alt / 1000.0f;
 			}
 
 			float x;
@@ -1125,9 +1124,6 @@ int Simulator::publish_ev_topic(mavlink_vision_position_estimate_t *ev_mavlink)
 	uint64_t timestamp = hrt_absolute_time();
 
 	struct vehicle_local_position_s vision_position = {};
-
-	// Use the estimator type to identify the simple vision estimate
-	vision_position.estimator_type = MAV_ESTIMATOR_TYPE_VISION;
 
 	vision_position.timestamp = timestamp;
 	vision_position.x = ev_mavlink->x;

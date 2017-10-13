@@ -10,8 +10,6 @@ add_definitions(
 
 set(config_module_list
 
-  # examples/px4_simple_app
-
 	#
 	# Board support modules
 	#
@@ -89,7 +87,6 @@ set(config_module_list
 	lib/tailsitter_recovery
 	lib/version
 	lib/DriverFramework/framework
-	lib/micro-CDR
 
 	#
 	# POSIX

@@ -31,7 +31,7 @@
 #
 ############################################################################
 
-set(msg_file_names
+set(msg_files
 	actuator_armed.msg
 	actuator_controls.msg
 	actuator_direct.msg
@@ -40,17 +40,17 @@ set(msg_file_names
 	airspeed.msg
 	att_pos_mocap.msg
 	battery_status.msg
-	camera_trigger.msg
 	camera_capture.msg
+	camera_trigger.msg
 	collision_report.msg
 	commander_state.msg
-	control_state.msg
 	cpuload.msg
 	debug_key_value.msg
+	debug_value.msg
+	debug_vect.msg
 	differential_pressure.msg
 	distance_sensor.msg
 	ekf2_innovations.msg
-	ekf2_replay.msg
 	ekf2_timestamps.msg
 	esc_report.msg
 	esc_status.msg
@@ -88,12 +88,13 @@ set(msg_file_names
 	satellite_info.msg
 	sensor_accel.msg
 	sensor_baro.msg
+	sensor_bias.msg
 	sensor_combined.msg
 	sensor_correction.msg
-	sensor_selection.msg
 	sensor_gyro.msg
 	sensor_mag.msg
 	sensor_preflight.msg
+	sensor_selection.msg
 	servorail_status.msg
 	subsystem_info.msg
 	system_power.msg
@@ -126,17 +127,126 @@ set(msg_file_names
 	wind_estimate.msg
 	)
 
-# Get absolute paths
-set(msg_files)
-set(msg_include_paths)
+px4_add_git_submodule(TARGET git_gencpp PATH tools/gencpp)
+px4_add_git_submodule(TARGET git_genmsg PATH tools/genmsg)
 
-foreach(msg_file ${msg_file_names})
-	list(APPEND msg_files ${CMAKE_CURRENT_SOURCE_DIR}/${msg_file})
+# headers
+set(msg_out_path ${PX4_BINARY_DIR}/uORB/topics)
+set(msg_source_out_path	${CMAKE_CURRENT_BINARY_DIR}/topics_sources)
+
+set(uorb_headers)
+set(uorb_sources ${msg_source_out_path}/uORBTopics.cpp)
+foreach(msg_file ${msg_files})
+	get_filename_component(msg ${msg_file} NAME_WE)
+	list(APPEND uorb_headers ${msg_out_path}/${msg}.h)
+	list(APPEND uorb_sources ${msg_source_out_path}/${msg}.cpp)
 endforeach()
 
-list(APPEND msg_include_paths ${CMAKE_CURRENT_SOURCE_DIR})
-set(msg_include_paths ${msg_include_paths} PARENT_SCOPE)
+# Generate uORB headers
+add_custom_command(OUTPUT ${uorb_headers}
+	COMMAND ${PYTHON_EXECUTABLE} tools/px_generate_uorb_topic_files.py
+		--headers
+		-f ${msg_files}
+		-i ${CMAKE_CURRENT_SOURCE_DIR}
+		-o ${msg_out_path}
+		-e templates/uorb
+		-t ${CMAKE_CURRENT_BINARY_DIR}/tmp/headers
+		-q
+	DEPENDS ${msg_files}
+	COMMENT "Generating uORB topic headers"
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	VERBATIM
+	)
+add_custom_target(uorb_headers DEPENDS ${uorb_headers})
 
-set(msg_files ${msg_files} PARENT_SCOPE)
+# Generate uORB sources
+add_custom_command(OUTPUT ${uorb_sources}
+	COMMAND ${PYTHON_EXECUTABLE} tools/px_generate_uorb_topic_files.py
+		--sources
+		-f ${msg_files}
+		-i ${CMAKE_CURRENT_SOURCE_DIR}
+		-o ${msg_source_out_path}
+		-e templates/uorb
+		-t ${CMAKE_CURRENT_BINARY_DIR}/tmp/sources
+		-q
+	DEPENDS ${msg_files}
+	COMMENT "Generating uORB topic sources"
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	VERBATIM
+	)
 
-# vim: set noet ft=cmake fenc=utf-8 ff=unix :
+px4_add_library(uorb_msgs ${uorb_sources})
+add_dependencies(uorb_msgs uorb_headers)
+
+###############################################################################
+# micro-cdr serialization
+###############################################################################
+# if RTPS is enabled generate serialization code for each uORB message
+if (GENERATE_RTPS_BRIDGE)
+
+	set(msg_out_path_microcdr ${PX4_BINARY_DIR}/uORB_microcdr/topics)
+	set(msg_source_out_path_microcdr ${CMAKE_CURRENT_BINARY_DIR}/topics_microcdr_sources)
+
+	set(uorb_headers_microcdr)
+	set(uorb_sources_microcdr)
+
+	# send topic files
+	set(send_topic_files)
+	foreach(topic ${config_rtps_send_topics})
+		list(APPEND send_topic_files ${PX4_SOURCE_DIR}/msg/${topic}.msg)
+		list(APPEND uorb_headers_microcdr ${msg_out_path_microcdr}/${topic}.h)
+		list(APPEND uorb_sources_microcdr ${msg_source_out_path_microcdr}/${topic}.cpp)
+	endforeach()
+
+	# receive topic files
+	set(receive_topic_files)
+	foreach(topic ${config_rtps_receive_topics})
+		list(APPEND receive_topic_files ${PX4_SOURCE_DIR}/msg/${topic}.msg)
+		list(APPEND uorb_headers_microcdr ${msg_out_path_microcdr}/${topic}.h)
+		list(APPEND uorb_sources_microcdr ${msg_source_out_path_microcdr}/${topic}.cpp)
+	endforeach()
+
+	list(REMOVE_DUPLICATES uorb_headers_microcdr)
+	list(REMOVE_DUPLICATES uorb_sources_microcdr)
+
+	# Generate uORB serialization headers
+	add_custom_command(OUTPUT ${uorb_headers_microcdr}
+		COMMAND ${PYTHON_EXECUTABLE} tools/px_generate_uorb_topic_files.py
+			--headers
+			-f ${send_topic_files} ${receive_topic_files}
+			-i ${CMAKE_CURRENT_SOURCE_DIR}
+			-o ${msg_out_path_microcdr}
+			-e templates/uorb_microcdr
+			-t ${CMAKE_CURRENT_BINARY_DIR}/tmp/headers_microcdr
+			-q
+		DEPENDS ${msg_files}
+		COMMENT "Generating uORB microcdr topic headers"
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		VERBATIM
+		)
+	add_custom_target(uorb_headers_microcdr DEPENDS ${uorb_headers_microcdr})
+
+	# Generate uORB serialization sources
+	add_custom_command(OUTPUT ${uorb_sources_microcdr}
+		COMMAND ${PYTHON_EXECUTABLE} tools/px_generate_uorb_topic_files.py
+			--sources
+			-f ${send_topic_files} ${receive_topic_files}
+			-i ${CMAKE_CURRENT_SOURCE_DIR}
+			-o ${msg_source_out_path_microcdr}
+			-e templates/uorb_microcdr
+			-t ${CMAKE_CURRENT_BINARY_DIR}/tmp/sources_microcdr
+			-q
+		DEPENDS ${msg_files}
+		COMMENT "Generating uORB microcdr topic sources"
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		VERBATIM
+		)
+	px4_add_library(uorb_msgs_microcdr ${uorb_sources_microcdr})
+	add_dependencies(uorb_msgs_microcdr uorb_headers_microcdr uorb_headers)
+
+	# microCDR
+	target_include_directories(uorb_msgs_microcdr
+		PRIVATE ${PX4_SOURCE_DIR}/src/lib/micro-CDR/include
+		PRIVATE ${PX4_BINARY_DIR}/src/lib/micro-CDR/include/microcdr
+	)
+endif()
