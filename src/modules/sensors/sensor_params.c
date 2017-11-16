@@ -1107,6 +1107,16 @@ PARAM_DEFINE_INT32(SENS_EN_SF0X, 0);
 PARAM_DEFINE_INT32(SENS_EN_MB12XX, 0);
 
 /**
+ * MappyDot mini Lidar (mappydot)
+ *
+ * @reboot_required true
+ *
+ * @boolean
+ * @group Sensor Enable
+ */
+PARAM_DEFINE_INT32(SENS_EN_MAPPYDOT, 1);
+
+/**
  * TeraRanger Rangefinder (i2c)
  *
  * @reboot_required true
