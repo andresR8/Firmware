@@ -20,11 +20,12 @@ set(config_module_list
 	drivers/l3gd20
 	drivers/hmc5883
 	drivers/ms5611
-	drivers/mb12xx
+	drivers/mappydot
+	#drivers/mb12xx
 	#drivers/srf02
 	drivers/sf0x
 	drivers/ll40ls
-	drivers/teraranger
+	#drivers/teraranger
 	drivers/gps
 	drivers/pwm_out_sim
 	#drivers/hott
@@ -36,7 +37,7 @@ set(config_module_list
 	drivers/ms4525_airspeed
 	drivers/ms5525_airspeed
 	drivers/sdp3x_airspeed
-	drivers/frsky_telemetry
+	#drivers/frsky_telemetry
 	modules/sensors
 	#drivers/mkblctrl
 	drivers/px4flow

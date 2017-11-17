@@ -29,6 +29,11 @@ set MIXER redcat
 set PWM_AUX_OUT 1234
 set MIXER_AUX kiwi
 set PWM_AUX_RATE 60
+set FAILSAFE 1500
+set FAILSAFE_AUX 1500
+
+#Start mappydot driver at init
+set SENS_EN_MAPPYDOT 1
 
 # Configure this as ugv
 set MAV_TYPE 10

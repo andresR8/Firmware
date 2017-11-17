@@ -363,6 +363,13 @@ then
 	mb12xx start
 fi
 
+# mappydot mini lidar sensor
+if param greater SENS_EN_MAPPYDOT 0
+then
+	mappydot start
+fi
+
+
 # teraranger one tof sensor
 if param greater SENS_EN_TRANGER 0
 then
