@@ -282,11 +282,11 @@ MAPPYDOT::init()
 	
 	// XXX we should find out why we need to wait 200 ms here
 	usleep(200000);
-	/* check for connected rangefinders on each i2c port:
-	   We start from i2c base address (0x70 = 112) and count downwards
-	   So second iteration it uses i2c address 111, third iteration 110 and so on*/
+	/* check for connected lidars on each i2c port:
+	   We start from i2c base address ( 0x08 ) and count downwards
+	   So second iteration it uses i2c address 0x09, third iteration 0x0A and so on*/
 	for (unsigned counter = 0; counter <= MAPPYDOT_MAX_RANGEFINDERS; counter++) {
-		_index_counter = MAPPYDOT_BASEADDR - counter;	/* set temp lidar i2c address to base adress - counter */
+		_index_counter = MAPPYDOT_BASEADDR + counter;	/* set temp lidar i2c address to base adress - counter */
 		set_address(_index_counter);			/* set I2c port to temp lidar i2c adress */
 		int ret2 = verify();
 
@@ -301,12 +301,13 @@ MAPPYDOT::init()
 	set_address(_index_counter); /* set i2c port back to base adress for rest of driver */
 
 	/* if only one lidar detected, no special timing is required between firing, so use default */
-	if (addr_ind.size() == 1) {
+	/*if (addr_ind.size() == 1) {
 		_cycling_rate = MAPPYDOT_CONVERSION_INTERVAL;
 
 	} else {
 		_cycling_rate = TICKS_BETWEEN_SUCCESIVE_FIRES;
-	}
+	}*/
+	_cycling_rate = MAPPYDOT_CONVERSION_INTERVAL;
 
 	/* show the connected lidars in terminal */
 	for (unsigned i = 0; i < addr_ind.size(); i++) {
@@ -574,7 +575,9 @@ MAPPYDOT::collect()
 
 	uint16_t distance_mm = val[0] << 8 | val[1];
 	float distance_m = float(distance_mm) * 1e-3f;
-	//PX4_INFO("collecting %0.4f",(double)distance_m);
+	  
+	//PX4_INFO("sensor %d collecting %0.4f \n",_cycle_counter,(double)distance_m);
+ 	
 
 	struct distance_sensor_s report;
 	report.timestamp = hrt_absolute_time();
@@ -660,6 +663,14 @@ MAPPYDOT::cycle()
 	if (OK != collect()) {
 		DEVICE_DEBUG("measure error lidar adress %d", _index_counter);
 	}
+
+	/* change i2c adress to next lidar */
+	_cycle_counter = _cycle_counter + 1;
+
+	if (_cycle_counter >= addr_ind.size()) {
+		_cycle_counter = 0;
+	}
+
 
 	
 
