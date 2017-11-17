@@ -116,7 +116,7 @@ then
 
 	if [ $FAILSAFE != none ]
 	then
-		pwm failsafe -d ${OUTPUT_DEV} ${FAILSAFE}
+		pwm failsafe -c 12345678 -d ${OUTPUT_DEV} -p ${FAILSAFE}
 	fi
 fi
 
@@ -250,7 +250,7 @@ then
 
 		if [ $FAILSAFE_AUX != none ]
 		then
-			pwm failsafe -d ${OUTPUT_AUX_DEV} ${FAILSAFE}
+			pwm failsafe -c 123456 -d ${OUTPUT_AUX_DEV} -p ${FAILSAFE_AUX}
 		fi
 
 	fi
